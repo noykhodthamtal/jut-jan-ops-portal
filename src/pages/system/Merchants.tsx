@@ -2,9 +2,9 @@ import { Box, Button, Chip, Stack, Typography } from '@mui/material'
 import { DataTable } from '../../components'
 
 const merchants = [
-  { name: 'JutJan Foods', plan: 'PRO', stores: 12, active: true },
-  { name: 'Street Bites', plan: 'FREE', stores: 3, active: true },
-  { name: 'Night Market Co.', plan: 'PRO', stores: 6, active: false },
+  { name: 'JutJan Foods', plan: 'ໂປ', stores: 12, active: true },
+  { name: 'Street Bites', plan: 'ຟຣີ', stores: 3, active: true },
+  { name: 'Night Market Co.', plan: 'ໂປ', stores: 6, active: false },
 ]
 
 export default function Merchants() {
@@ -15,15 +15,15 @@ export default function Merchants() {
           <Typography variant="overline" color="text.secondary">
             ເຈົ້າຂອງລະບົບ
           </Typography>
-          <Typography variant="h5">ຈັດການ Merchant</Typography>
+          <Typography variant="h5">ຈັດການຮ້ານຄ້າ</Typography>
         </Box>
-        <Button variant="contained">ສ້າງ Merchant</Button>
+        <Button variant="contained">ສ້າງຮ້ານຄ້າ</Button>
       </Box>
 
       <DataTable
         columns={[
           { key: 'name', label: 'ຊື່' },
-          { key: 'plan', label: 'ແຜນ' },
+          { key: 'plan', label: 'ແຜນໃຊ້ງານ' },
           { key: 'stores', label: 'ສາຂາ' },
           {
             key: 'status',

@@ -32,11 +32,14 @@ import InsightsIcon from "@mui/icons-material/Insights";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
 import StoreIconOutlined from "@mui/icons-material/StoreOutlined";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
+import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 import BadgeIcon from "@mui/icons-material/Badge";
 import "./App.css";
 import { appRoutes } from "./routes";
 import { roleLabels, type Role } from "./roles";
 import { useAuth, useSession, useStoreContext, useStoreInfo } from "./hooks";
+import { useMerchantInfo } from "./hooks/useMerchantInfo";
 
 const drawerWidth = 280;
 const defaultRoute = "/dashboard";
@@ -118,6 +121,13 @@ export default function App() {
   const { accessToken, ready, userEmail } = useSession();
   const { logout, loading } = useAuth();
   const { storeName } = useStoreInfo();
+  const { merchantName } = useMerchantInfo();
+
+  const isOwner = role === 'SYSTEM_OWNER';
+  const displayName = isOwner
+    ? (merchantName || '')
+    : (storeName || '');
+  const displayFallback = isOwner ? 'ບໍ່ພົບຊື່ຮ້ານຄ້າ' : 'ບໍ່ພົບຊື່ຮ້ານ';
 
   useStoreContext();
 
@@ -192,8 +202,8 @@ export default function App() {
       <Box className="sider-brand">
         <Box className="brand-mark">JO</Box>
         <Box>
-          <Typography variant="h6">Jutjan OPS</Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2, color: '#111827' }}>Jutjan OPS</Typography>
+          <Typography variant="body2" sx={{ color: '#64748B', fontWeight: 500, fontSize: '0.85rem' }}>
             ບໍລິຫານວຽກງານຮ້ານ
           </Typography>
         </Box>
@@ -201,9 +211,9 @@ export default function App() {
 
       <Box className="sider-info-inline">
         <Box className="info-chip">
-          <StoreIconOutlined fontSize="small" />
+          {isOwner ? <StorefrontIcon fontSize="small" /> : <StoreIconOutlined fontSize="small" />}
           <Typography variant="caption" className="ellipsis">
-            {storeName || "ບໍ່ພົບຊື່ຮ້ານ"}
+            {displayName || displayFallback}
           </Typography>
         </Box>
         <Box className="info-chip">
@@ -212,17 +222,52 @@ export default function App() {
             {userEmail || "ບໍ່ພົບອີເມວ"}
           </Typography>
         </Box>
-        <Box className="info-chip">
-          <BadgeIcon fontSize="small" />
-          <Typography variant="caption" className="ellipsis">
-            {roleBadge}
-          </Typography>
+        <Box sx={{ pt: 0.5 }}>
+          {role === 'SYSTEM_OWNER' && (
+            <Box sx={{
+              display: 'inline-flex', alignItems: 'center', gap: 0.75,
+              px: 1.25, py: 0.5, borderRadius: 99,
+              bgcolor: '#F3E8FF', border: '1px solid #E9D5FF',
+            }}>
+              <AdminPanelSettingsIcon sx={{ fontSize: '0.9rem', color: '#9333EA' }} />
+              <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#6B21A8', lineHeight: 1 }}>
+                {roleBadge}
+              </Typography>
+            </Box>
+          )}
+          {role === 'STORE_MANAGER' && (
+            <Box sx={{
+              display: 'inline-flex', alignItems: 'center', gap: 0.75,
+              px: 1.25, py: 0.5, borderRadius: 99,
+              bgcolor: '#EFF6FF', border: '1px solid #BFDBFE',
+            }}>
+              <ManageAccountsIcon sx={{ fontSize: '0.9rem', color: '#2563EB' }} />
+              <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#1D4ED8', lineHeight: 1 }}>
+                ຜູ້ຈັດການ
+              </Typography>
+            </Box>
+          )}
+          {role === 'STORE_STAFF' && (
+            <Box sx={{
+              display: 'inline-flex', alignItems: 'center', gap: 0.75,
+              px: 1.25, py: 0.5, borderRadius: 99,
+              bgcolor: '#ECFDF5', border: '1px solid #A7F3D0',
+            }}>
+              <BadgeIcon sx={{ fontSize: '0.9rem', color: '#059669' }} />
+              <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#047857', lineHeight: 1 }}>
+                ພະນັກງານ
+              </Typography>
+            </Box>
+          )}
         </Box>
       </Box>
 
       <List className="sider-nav">
         {groupedNav.map((group) => (
-          <li key={group.title}>
+          <li key={group.title} style={{ listStyle: 'none' }}>
+            <Typography className="sider-nav-group-title">
+              {group.title}
+            </Typography>
             <ul style={{ padding: 0 }}>
               {group.items.map((route) => (
                 <ListItemButton
@@ -234,7 +279,7 @@ export default function App() {
                   <ListItemIcon className="sider-icon">
                     {getRouteIcon(route.path)}
                   </ListItemIcon>
-                  <ListItemText primary={route.label} />
+                  <ListItemText primary={route.label} disableTypography sx={{ fontSize: '0.9rem', color: route.path === path ? '#E63946' : '#475569' }} />
                 </ListItemButton>
               ))}
             </ul>
@@ -242,13 +287,18 @@ export default function App() {
         ))}
       </List>
       <Box sx={{ mt: "auto", p: 2 }}>
-        <Divider sx={{ mb: 2 }} />
+        <Divider sx={{ mb: 2, borderColor: 'rgba(0,0,0,0.04)' }} />
         <Button
           variant="outlined"
           startIcon={<LogoutIcon />}
           onClick={logout}
           disabled={loading}
           fullWidth
+          sx={{
+            borderColor: '#E2E8F0',
+            color: '#64748B',
+            '&:hover': { borderColor: '#E63946', color: '#E63946', backgroundColor: '#FFF0F0' }
+          }}
         >
           ອອກຈາກລະບົບ
         </Button>
@@ -275,38 +325,30 @@ export default function App() {
               <MenuIcon />
             </IconButton>
             <Stack spacing={0.5}>
-              <Typography variant="body2" color="text.secondary">
-                Jutjan OPS
-              </Typography>
-              <Typography variant="h6">
-                {activeRoute?.label ?? fallbackRoute.label}
-              </Typography>
-              {!!breadcrumbItems.length && (
-                <Breadcrumbs className="app-breadcrumbs" aria-label="breadcrumb">
-                  {breadcrumbItems.map((crumb, index) =>
-                    index === breadcrumbItems.length - 1 ? (
-                      <Typography
-                        key={crumb.path}
-                        variant="caption"
-                        color="text.secondary"
-                      >
-                        {crumb.label}
-                      </Typography>
-                    ) : (
-                      <Link
-                        key={crumb.path}
-                        underline="hover"
-                        color="inherit"
-                        variant="caption"
-                        onClick={() => navigate(crumb.path)}
-                        sx={{ cursor: "pointer" }}
-                      >
-                        {crumb.label}
-                      </Link>
-                    )
-                  )}
-                </Breadcrumbs>
-              )}
+              <Breadcrumbs className="app-breadcrumbs" aria-label="breadcrumb">
+                {breadcrumbItems.map((crumb, index) =>
+                  index === breadcrumbItems.length - 1 ? (
+                    <Typography
+                      key={crumb.path}
+                      variant="h6"
+                      sx={{ color: '#111827', fontWeight: 700 }}
+                    >
+                      {crumb.label}
+                    </Typography>
+                  ) : (
+                    <Link
+                      key={crumb.path}
+                      underline="hover"
+                      color="inherit"
+                      variant="body1"
+                      onClick={() => navigate(crumb.path)}
+                      sx={{ cursor: "pointer", fontWeight: 500, color: '#64748B' }}
+                    >
+                      {crumb.label}
+                    </Link>
+                  )
+                )}
+              </Breadcrumbs>
             </Stack>
           </Stack>
         </Toolbar>

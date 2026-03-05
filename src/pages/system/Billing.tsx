@@ -29,7 +29,7 @@ export default function Billing() {
               <Typography variant="body2">ປະຫວັດການຈ່າຍເງິນ</Typography>
             </Box>
           </Stack>
-          <Button variant="contained">ສ້າງວຽກ Roadmap</Button>
+          <Button variant="contained">ສ້າງແຜນງານ</Button>
         </Stack>
       </Card>
     </Stack>

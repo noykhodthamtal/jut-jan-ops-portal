@@ -1,7 +1,3 @@
-body {
-  background: radial-gradient(circle at top left, #ffe5e5, #fff4f4 35%, #ffecec 70%, #fff0f0 100%);
-}
-
 .login-wrapper {
   min-height: 100vh;
   display: grid;
@@ -10,60 +6,71 @@ body {
 }
 
 .app-bar {
-  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.7) !important;
+  backdrop-filter: blur(16px) saturate(180%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+}
+
+.sider-shell {
+  background: #FFFFFF;
 }
 
 .brand-mark {
   width: 44px;
   height: 44px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #ff9b8f, #ff6b6b, #ffb47b);
+  border-radius: 12px;
+  background: linear-gradient(135deg, #E63946, #FF6B6B);
   display: grid;
   place-items: center;
   font-weight: 700;
-  color: #4b0f0f;
-}
-
-.sider-shell {
-  background: #fff7f7;
+  font-size: 1.2rem;
+  color: #FFFFFF;
+  box-shadow: 0 6px 16px rgba(230, 57, 70, 0.25);
 }
 
 .sider-brand {
   display: flex;
-  gap: 12px;
+  gap: 16px;
   align-items: center;
-  padding: 20px 16px 8px;
+  padding: 24px 20px 12px;
 }
 
 .sider-info-inline {
-  margin: 4px 12px 16px;
-  padding: 10px 12px;
+  margin: 8px 16px 20px;
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 6px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(255, 244, 244, 0.9));
-  border-radius: 14px;
-  border: 1px solid rgba(214, 40, 40, 0.12);
-  box-shadow: 0 10px 16px rgba(214, 40, 40, 0.08);
+  gap: 8px;
+  background: #F8FAFC;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.03);
+  transition: all 0.3s ease;
+}
+
+.sider-info-inline:hover {
+  background: #F1F5F9;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
 }
 
 .info-chip {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 6px;
+  gap: 10px;
+  padding: 4px 0;
   min-width: 0;
-  color: #5d1a1a;
+  color: #475569;
 }
 
 .info-chip svg {
-  color: #c02626;
+  color: #94A3B8;
+  font-size: 1.1rem;
 }
 
 .info-chip:not(:last-child) {
-  border-bottom: 1px dashed rgba(214, 40, 40, 0.2);
-  padding-bottom: 8px;
+  border-bottom: 1px dashed rgba(0, 0, 0, 0.06);
+  padding-bottom: 10px;
 }
 
 .ellipsis {
@@ -74,54 +81,82 @@ body {
 }
 
 .sider-nav {
-  padding: 0 12px 12px;
+  padding: 0 16px 16px;
+}
+
+.sider-nav > li {
+  margin-bottom: 24px;
+}
+
+.sider-nav-group-title {
+  font-size: 0.75rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94A3B8 !important;
+  font-weight: 700 !important;
+  margin: 0 0 12px 12px !important;
 }
 
 .sider-item {
-  border-radius: 12px;
-  margin: 4px 0;
+  border-radius: 10px !important;
+  margin: 4px 0 !important;
+  padding: 8px 12px !important;
+  transition: all 0.2s ease !important;
+  border: 1px solid transparent !important;
+}
+
+.sider-item:hover {
+  background: rgba(230, 57, 70, 0.04) !important;
+  transform: translateX(4px);
 }
 
 .sider-item.Mui-selected {
-  background: rgba(214, 40, 40, 0.12) !important;
-  color: #b91c1c;
+  background: #FFF0F0 !important;
+  color: #E63946 !important;
+  border-color: #FFE0E0 !important;
+  box-shadow: 0 2px 8px rgba(230, 57, 70, 0.05) !important;
+}
+
+.sider-item.Mui-selected .MuiListItemText-primary {
+  font-weight: 600 !important;
 }
 
 .sider-icon {
   min-width: 36px !important;
-  color: rgba(92, 29, 29, 0.7);
+  color: #64748B !important;
+  transition: color 0.2s ease !important;
 }
 
-.sider-item.Mui-selected .sider-icon {
-  color: #b91c1c;
+.sider-item.Mui-selected .sider-icon,
+.sider-item:hover .sider-icon {
+  color: #E63946 !important;
 }
 
 .app-content {
-  background: linear-gradient(180deg, #fff7f7 0%, #ffecec 100%);
+  background: transparent;
 }
 
 .app-breadcrumbs {
-  color: rgba(92, 29, 29, 0.8);
+  color: #64748B;
 }
 
 .content-inner {
   width: 100%;
+  max-width: 1400px;
   margin: 0 auto;
   display: grid;
-  gap: 16px;
-  background: transparent;
-  border-radius: 0;
-  padding: 0;
-  box-shadow: none;
+  gap: 24px;
+  animation: fadeIn 0.4s ease-out forwards;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 16px;
+  margin-bottom: 8px;
 }
 
 .section-gap {
-  margin-top: 16px;
+  margin-top: 24px;
 }

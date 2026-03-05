@@ -55,7 +55,7 @@ export default function StoreMembers() {
               }}
             >
               <TextField
-                label="User ID"
+                label="ຣະຫັດຜູ້ໃຊ້"
                 value={formState.user_id}
                 onChange={(event) => setFormState({ ...formState, user_id: event.target.value })}
                 placeholder="UUID ຜູ້ໃຊ້"
@@ -68,9 +68,9 @@ export default function StoreMembers() {
                 onChange={(event) => setFormState({ ...formState, role: event.target.value })}
                 sx={{ minWidth: 180, flex: { xs: '1 1 100%', md: '1 1 200px' } }}
               >
-                <MenuItem value="OWNER">OWNER</MenuItem>
-                <MenuItem value="MANAGER">MANAGER</MenuItem>
-                <MenuItem value="STAFF">STAFF</MenuItem>
+                <MenuItem value="OWNER">ເຈ້າຂອງ</MenuItem>
+                <MenuItem value="MANAGER">ຜູ້ຈັດການ</MenuItem>
+                <MenuItem value="STAFF">ພະນັກງານ</MenuItem>
               </TextField>
               <Box
                 sx={{
@@ -117,9 +117,9 @@ export default function StoreMembers() {
                 onChange={(event) => handleRole(row, event.target.value)}
                 size="small"
               >
-                <MenuItem value="OWNER">OWNER</MenuItem>
-                <MenuItem value="MANAGER">MANAGER</MenuItem>
-                <MenuItem value="STAFF">STAFF</MenuItem>
+                <MenuItem value="OWNER">ເຈ້າຂອງ</MenuItem>
+                <MenuItem value="MANAGER">ຜູ້ຈັດການ</MenuItem>
+                <MenuItem value="STAFF">ພະນັກງານ</MenuItem>
               </TextField>
             ),
           },

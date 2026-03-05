@@ -3,52 +3,67 @@ import {
   Card,
   Chip,
   Divider,
-  LinearProgress,
   Stack,
   Typography,
+  Avatar,
+  IconButton,
 } from "@mui/material";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import Inventory2Icon from "@mui/icons-material/Inventory2";
 import ShoppingCartCheckoutIcon from "@mui/icons-material/ShoppingCartCheckout";
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
+import OutputIcon from "@mui/icons-material/Output";
+import SavingsIcon from "@mui/icons-material/Savings";
+import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
+import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import { useDailySummary } from "../hooks";
 
 const fallbackSummaryCards = [
-  { label: "ລາຍຮັບປະຈໍາວັນ", value: "฿12,450", delta: "+8.4%" },
-  { label: "ຄ່າໃຊ້ຈ່າຍປະຈໍາວັນ", value: "฿5,120", delta: "-3.1%" },
-  { label: "ກໍາໄລຂັ້ນຕົ້ນ", value: "฿7,330", delta: "+11.2%" },
+  { label: "ລາຍຮັບປະຈໍາວັນ", value: "฿12,450", delta: "+8.4%", icon: <AccountBalanceWalletIcon />, bg: "#ECFDF5", iconColor: "#10B981" },
+  { label: "ຄ່າໃຊ້ຈ່າຍປະຈໍາວັນ", value: "฿5,120", delta: "-3.1%", icon: <OutputIcon />, bg: "#FEF2F2", iconColor: "#EF4444" },
+  { label: "ກໍາໄລຂັ້ນຕົ້ນ", value: "฿7,330", delta: "+11.2%", icon: <SavingsIcon />, bg: "#EEF2FF", iconColor: "#6366F1" },
 ];
 
 const docStatus = [
-  { label: "ຮັບສະຕັອກ", group: "A/B/C", value: "6 ເປີດ" },
-  { label: "ນັບສະຕັອກປະຈໍາວັນ", group: "A/B/C", value: "2 ເປີດ" },
-  { label: "ໃບສັ່ງຊື້", group: "A/B/C", value: "3 ຄ້າງຢືນຢັນ" },
+  { label: "ຮັບສະຕັອກ", group: "A/B/C", value: "6 ເປີດ", bg: "#EEF2FF", color: "#6366F1", icon: <ReceiptLongIcon fontSize="small" /> },
+  { label: "ນັບສະຕັອກປະຈໍາວັນ", group: "A/B/C", value: "2 ເປີດ", bg: "#FDF4FF", color: "#C026D3", icon: <Inventory2Icon fontSize="small" /> },
+  { label: "ໃບສັ່ງຊື້", group: "A/B/C", value: "3 ຄ້າງຢືນຢັນ", bg: "#FFFBEB", color: "#D97706", icon: <ShoppingCartCheckoutIcon fontSize="small" /> },
 ];
 
 const alerts = [
-  "ຍັງບໍ່ປິດສະຕັອກກຸ່ມ B (ມື້ນີ້)",
-  "PO ກຸ່ມ A ຍັງບໍ່ສົ່ງ",
-  "ຍອດຄ່າໃຊ້ຈ່າຍຍັງບໍ່ຢືນຢັນ",
+  { text: "ຍັງບໍ່ປິດສະຕັອກກຸ່ມ B (ມື້ນີ້)", time: "1 ຊົ່ວໂມງກ່ອນ" },
+  { text: "PO ກຸ່ມ A ຍັງບໍ່ສົ່ງ", time: "2 ຊົ່ວໂມງກ່ອນ" },
+  { text: "ຍອດຄ່າໃຊ້ຈ່າຍຍັງບໍ່ຢືນຢັນ", time: "3 ຊົ່ວໂມງກ່ອນ" },
 ];
 
 export default function Dashboard() {
   const { loading, error, summaryCards } = useDailySummary();
-  const cards = summaryCards ?? fallbackSummaryCards;
+  
+  const cards = summaryCards
+    ? summaryCards.map((card, idx) => ({
+        ...card,
+        icon: fallbackSummaryCards[idx]?.icon ?? <AccountBalanceWalletIcon />,
+        bg: fallbackSummaryCards[idx]?.bg ?? "#ECFDF5",
+        iconColor: fallbackSummaryCards[idx]?.iconColor ?? "#10B981",
+      }))
+    : fallbackSummaryCards;
 
   return (
-    <Stack spacing={2}>
-      <Box className="page-header">
+    <Stack spacing={4}>
+      <Box className="page-header" sx={{ mb: 2 }}>
         <Box>
-          <Typography variant="h5">ພາບລວມວຽກງານຮ້ານ</Typography>
-          <Typography color="text.secondary">
+          <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5, color: "#111827" }}>ພາບລວມລະບົບ</Typography>
+          <Typography color="text.secondary" variant="body2">
             ສະຫຼຸບມື້ນີ້ ພ້ອມສະຖານະເອກະສານ ແລະສັນຍານແຈ້ງເຕືອນ
           </Typography>
         </Box>
         <Chip
-          color="primary"
-          variant="outlined"
+          color="default"
+          variant="filled"
           label={loading ? "ກໍາລັງໂຫລດ..." : "ມື້ນີ້ · ບັງກອກ (GMT+7)"}
+          sx={{ backgroundColor: "#FFFFFF", border: "1px solid #E2E8F0", color: "#475569", fontWeight: 600 }}
         />
       </Box>
 
@@ -56,130 +71,142 @@ export default function Dashboard() {
         sx={{
           display: "flex",
           flexWrap: "wrap",
-          gap: 2,
+          gap: 3,
         }}
       >
-        {cards.map((card, index) => (
-          <Box
-            key={card.label}
-            sx={{
-              flex: {
-                xs: "1 1 100%",
-                sm: "1 1 calc(50% - 8px)",
-                lg: "1 1 calc(33.333% - 10px)",
-              },
-              minWidth: 0,
-            }}
-          >
-            <Card
+        {cards.map((card) => {
+          const isNegative = card.delta.startsWith("-");
+          const trendColor = isNegative ? "error.main" : "success.main";
+          return (
+            <Box
+              key={card.label}
               sx={{
-                p: 2.5,
-                borderRadius: 3,
-                background:
-                  index === 0
-                    ? "linear-gradient(135deg, #fff0f0, #ffd9d9)"
-                    : index === 1
-                    ? "linear-gradient(135deg, #fff5f2, #ffe6db)"
-                    : "linear-gradient(135deg, #fff1f1, #ffd7c7)",
-                boxShadow: "0 16px 26px rgba(214,40,40,0.08)",
+                flex: {
+                  xs: "1 1 100%",
+                  sm: "1 1 calc(50% - 12px)",
+                  lg: "1 1 calc(33.333% - 16px)",
+                },
+                minWidth: 0,
               }}
             >
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Typography variant="subtitle2" color="text.secondary">
+              <Card
+                sx={{
+                  p: 3,
+                  position: "relative",
+                  overflow: "hidden",
+                  transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                  "&:hover": {
+                    transform: "translateY(-4px)",
+                    boxShadow: "0 12px 24px -10px rgba(0,0,0,0.1)",
+                  }
+                }}
+              >
+                <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 2 }}>
+                  <Avatar sx={{ bgcolor: card.bg, color: card.iconColor, width: 48, height: 48, borderRadius: 3 }}>
+                    {card.icon}
+                  </Avatar>
+                  <Chip 
+                    label={card.delta} 
+                    size="small" 
+                    icon={isNegative ? <TrendingDownIcon /> : <TrendingUpIcon />} 
+                    sx={{ 
+                      borderRadius: 2, 
+                      bgcolor: isNegative ? "#FEF2F2" : "#ECFDF5", 
+                      color: trendColor, 
+                      fontWeight: 600,
+                      "& .MuiChip-icon": { color: trendColor } 
+                    }} 
+                  />
+                </Stack>
+                <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500, mb: 0.5 }}>
                   {card.label}
                 </Typography>
-                {card.delta.startsWith("-") ? (
-                  <TrendingDownIcon fontSize="small" color="error" />
-                ) : (
-                  <TrendingUpIcon fontSize="small" color="success" />
-                )}
-              </Stack>
-              <Typography variant="h4" sx={{ mt: 1, fontWeight: 600 }}>
-                {card.value}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {card.delta} ຈາກມື້ວານ
-              </Typography>
-              <LinearProgress
-                sx={{ mt: 2, height: 6, borderRadius: 999 }}
-                color={card.delta.startsWith("-") ? "error" : "success"}
-                variant="determinate"
-                value={card.delta.startsWith("-") ? 34 : 68}
-              />
-            </Card>
-          </Box>
-        ))}
+                <Typography variant="h4" sx={{ fontWeight: 800, color: "#111827", letterSpacing: "-0.02em" }}>
+                  {card.value}
+                </Typography>
+              </Card>
+            </Box>
+          );
+        })}
       </Box>
 
       <Box
         sx={{
           display: "flex",
           flexWrap: "wrap",
-          gap: 2,
+          gap: 3,
         }}
       >
-        <Box sx={{ flex: { xs: "1 1 100%", md: "1 1 calc(60% - 8px)" }, minWidth: 0 }}>
-          <Card sx={{ p: 2.5, borderRadius: 3 }}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center">
+        <Box sx={{ flex: { xs: "1 1 100%", md: "1 1 calc(60% - 12px)" }, minWidth: 0 }}>
+          <Card sx={{ p: 3, height: "100%" }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
               <Box>
-                <Typography variant="h6">ສະຖານະເອກະສານ</Typography>
+                <Typography variant="h6" sx={{ color: "#111827", fontWeight: 700 }}>ສະຖານະເອກະສານ</Typography>
                 <Typography variant="body2" color="text.secondary">
                   ກວດສອບຄວາມຄືບໜ້າຂອງເອກະສານຕາມກຸ່ມ
                 </Typography>
               </Box>
-              <Chip label="ອັບເດດລ່າສຸດ" color="secondary" variant="outlined" />
+              <IconButton size="small" sx={{ color: "#64748B" }}><ArrowForwardIosIcon fontSize="inherit" /></IconButton>
             </Stack>
-            <Divider sx={{ my: 2 }} />
-            <Stack spacing={1.5}>
-              {docStatus.map((doc) => (
-                <Box
-                  key={doc.label}
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 2,
-                    p: 1.5,
-                    borderRadius: 2,
-                    background: "rgba(255, 244, 244, 0.75)",
-                  }}
-                >
-                  {doc.label.includes("ຮັບ") ? (
-                    <ReceiptLongIcon color="primary" fontSize="small" />
-                  ) : doc.label.includes("ນັບ") ? (
-                    <Inventory2Icon color="primary" fontSize="small" />
-                  ) : (
-                    <ShoppingCartCheckoutIcon color="primary" fontSize="small" />
-                  )}
-                  <Box sx={{ flex: 1 }}>
-                    <Typography variant="subtitle2">{doc.label}</Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      ກຸ່ມ {doc.group}
-                    </Typography>
+            <Stack spacing={2} sx={{ mt: 3 }}>
+              {docStatus.map((doc, idx) => (
+                <Box key={doc.label}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 2.5,
+                      borderRadius: 2,
+                    }}
+                  >
+                    <Avatar sx={{ bgcolor: doc.bg, color: doc.color, borderRadius: 2 }}>
+                      {doc.icon}
+                    </Avatar>
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant="subtitle2" sx={{ color: "#1E293B", fontWeight: 600 }}>{doc.label}</Typography>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+                        ກຸ່ມ {doc.group}
+                      </Typography>
+                    </Box>
+                    <Chip label={doc.value} size="small" sx={{ fontWeight: 600, bgcolor: "#F1F5F9", color: "#475569" }} />
                   </Box>
-                  <Chip label={doc.value} color="secondary" />
+                  {idx < docStatus.length - 1 && <Divider sx={{ my: 2, borderStyle: "dashed" }} />}
                 </Box>
               ))}
             </Stack>
           </Card>
         </Box>
-        <Box sx={{ flex: { xs: "1 1 100%", md: "1 1 calc(40% - 8px)" }, minWidth: 0 }}>
-          <Card sx={{ p: 2.5, borderRadius: 3, height: "100%" }}>
-            <Typography variant="h6">ແຈ້ງເຕືອນວັນນີ້</Typography>
-            <Typography variant="body2" color="text.secondary">
+
+        <Box sx={{ flex: { xs: "1 1 100%", md: "1 1 calc(40% - 12px)" }, minWidth: 0 }}>
+          <Card sx={{ p: 3, height: "100%", position: "relative", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+            <Box sx={{ position: "absolute", top: -20, right: -20, opacity: 0.05, transform: "rotate(15deg)" }}>
+              <NotificationsActiveIcon sx={{ fontSize: 160 }} />
+            </Box>
+            <Typography variant="h6" sx={{ color: "#111827", fontWeight: 700 }}>ແຈ້ງເຕືອນວັນນີ້</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
               ສິ່ງທີ່ຕ້ອງຈັດການກ່ອນປິດຮ້ານ
             </Typography>
-            <Stack spacing={1.5} mt={2}>
-              {alerts.map((alert) => (
+            
+            <Stack spacing={2} sx={{ flexGrow: 1 }}>
+              {alerts.map((alert, idx) => (
                 <Box
-                  key={alert}
+                  key={idx}
                   sx={{
-                    p: 1.5,
-                    borderRadius: 2,
-                    border: "1px solid rgba(214,40,40,0.12)",
-                    backgroundColor: "#fff5f5",
+                    p: 2,
+                    borderRadius: 3,
+                    border: "1px solid #FFE0E0",
+                    backgroundColor: "#FFF5F5",
+                    display: "flex",
+                    flexDirection: "column",
                   }}
                 >
-                  <Typography variant="body2">{alert}</Typography>
+                  <Stack direction="row" spacing={1.5} alignItems="flex-start">
+                    <Box sx={{ mt: 0.5, width: 8, height: 8, borderRadius: "50%", bgcolor: "#EF4444" }} />
+                    <Box>
+                      <Typography variant="body2" sx={{ fontWeight: 600, color: "#991B1B", mb: 0.5 }}>{alert.text}</Typography>
+                      <Typography variant="caption" sx={{ color: "#DC2626", opacity: 0.8 }}>{alert.time}</Typography>
+                    </Box>
+                  </Stack>
                 </Box>
               ))}
             </Stack>
@@ -188,7 +215,7 @@ export default function Dashboard() {
       </Box>
 
       {error ? (
-        <Typography color="error" sx={{ mt: 2 }}>
+        <Typography color="error" sx={{ mt: 2, p: 2, bgcolor: "#FEF2F2", borderRadius: 2 }}>
           Supabase ຜິດພາດ: {error}
         </Typography>
       ) : null}

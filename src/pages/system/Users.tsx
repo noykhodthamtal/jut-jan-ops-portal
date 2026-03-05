@@ -22,7 +22,7 @@ export default function Users() {
       <DataTable
         columns={[
           { key: 'name', label: 'ຜູ້ໃຊ້' },
-          { key: 'merchants', label: 'Merchant' },
+          { key: 'merchants', label: 'ຮ້ານຄ້າ' },
           { key: 'stores', label: 'ສາຂາ' },
           {
             key: 'status',

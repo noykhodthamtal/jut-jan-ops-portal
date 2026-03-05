@@ -29,13 +29,13 @@ export default function PurchaseOrderRules() {
           <Typography variant="overline" color="text.secondary">
             ຂໍ້ມູນພື້ນຖານ
           </Typography>
-          <Typography variant="h5">ກົດກາ PO</Typography>
+          <Typography variant="h5">ກົດເກນສັ່ງຊື້</Typography>
           <Typography color="text.secondary">
-            ກໍານົດ % threshold ຕໍ່ກຸ່ມສໍາລັບແນະນໍາການສັ່ງຊື້
+            ກໍານົດເປີເຊັນ (%) ຕໍ່ກຸ່ມສໍາລັບແນະນໍາການສັ່ງຊື້
           </Typography>
         </Box>
         <Button variant="contained" onClick={() => setShowForm((prev) => !prev)}>
-          {showForm ? 'ປິດ' : 'ເພີ່ມ Threshold'}
+          {showForm ? 'ປິດ' : 'ເພີ່ມເກ຾ນ'}
         </Button>
       </Box>
 
@@ -63,7 +63,7 @@ export default function PurchaseOrderRules() {
             ))}
           </TextField>
           <TextField
-            label="Threshold (%)"
+            label="ເກ຾ນ (%)"
             type="number"
             value={formState.threshold_percent}
             onChange={(event) =>
@@ -108,7 +108,7 @@ export default function PurchaseOrderRules() {
           },
           {
             key: 'threshold_percent',
-            label: 'Threshold (%)',
+            label: 'ເກນ (%)',
             render: (row) =>
               editingId === row.id ? (
                 <TextField
@@ -130,7 +130,7 @@ export default function PurchaseOrderRules() {
           {
             key: 'status',
             label: 'ສະຖານະ',
-            render: (row) => (
+            render: () => (
               <Chip size="small" color="primary" label="ເປີດໃຊ້ງານ" />
             ),
           },
