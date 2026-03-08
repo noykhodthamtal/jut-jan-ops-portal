@@ -28,3 +28,6 @@ jutjanops-api-spec.json
 .env
 .vercel
 .env*.local
+
+# Local Netlify folder
+.netlify
