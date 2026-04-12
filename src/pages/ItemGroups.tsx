@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Box, Button, Chip, Stack, TextField, Typography } from '@mui/material'
+import { Box, Button, Chip, Stack, TextField, Typography, Snackbar, Alert } from '@mui/material'
 import { DataTable } from '../components'
 import { useItemGroups } from '../hooks'
 
@@ -8,6 +8,8 @@ export default function ItemGroups() {
     rows,
     loading,
     error,
+    success,
+    setSuccess,
     showForm,
     formState,
     query,
@@ -213,6 +215,17 @@ export default function ItemGroups() {
           Supabase ຜິດພາດ: {error}
         </Typography>
       ) : null}
+
+      <Snackbar
+        open={success}
+        autoHideDuration={3000}
+        onClose={() => setSuccess(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={() => setSuccess(false)} severity="success" sx={{ width: '100%' }}>
+          ດໍາເນີນການສໍາເລັດແລ້ວ!
+        </Alert>
+      </Snackbar>
     </Stack>
   )
 }

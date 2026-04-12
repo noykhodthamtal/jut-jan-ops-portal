@@ -20,5 +20,5 @@ export type CreateItemGroupRequest = Pick<
 >
 
 export type UpdateItemGroupRequest = Partial<
-  Pick<ItemGroup, 'code' | 'name' | 'sort_order' | 'color' | 'is_active' | 'deleted_at' | 'deleted_by'>
+  Pick<ItemGroup, 'store_id' | 'code' | 'name' | 'sort_order' | 'color' | 'is_active' | 'deleted_at' | 'deleted_by'>
 >

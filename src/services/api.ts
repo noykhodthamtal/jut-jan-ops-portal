@@ -25,6 +25,14 @@ export async function updateItem(id: string, payload: UpdateItemRequest) {
   return supabasePatch<Item[]>(`/items?id=eq.${id}`, payload)
 }
 
-export async function softDeleteItem(id: string, deletedAt: string) {
-  return supabasePatch<Item[]>(`/items?id=eq.${id}`, { deleted_at: deletedAt })
+export async function softDeleteItem(id: string, deletedAt: string, storeId: string) {
+  return supabasePatch<Item[]>(
+    `/items?id=eq.${id}`,
+    { 
+      store_id: storeId,
+      deleted_at: deletedAt,
+      is_active: false
+    },
+    { Prefer: 'return=minimal' }
+  )
 }

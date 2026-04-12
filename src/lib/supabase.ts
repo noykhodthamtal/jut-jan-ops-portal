@@ -67,7 +67,11 @@ export async function supabaseGet<T>(path: string, params?: Record<string, strin
     throw new Error(message || 'Request failed')
   }
 
-  return (await response.json()) as T
+  const text = await response.text()
+  if (!text) {
+    return [] as T
+  }
+  return JSON.parse(text) as T
 }
 
 export async function supabasePost<T>(path: string, payload: unknown) {
@@ -82,14 +86,36 @@ export async function supabasePost<T>(path: string, payload: unknown) {
     throw new Error(message || 'Request failed')
   }
 
-  return (await response.json()) as T
+  const text = await response.text()
+  if (!text) {
+    return [] as T
+  }
+  return JSON.parse(text) as T
 }
 
-export async function supabasePatch<T>(path: string, payload: unknown) {
+export async function supabasePatch<T>(path: string, payload: unknown, customHeaders?: Record<string, string>) {
   const response = await fetch(`${getBaseUrl()}${path}`, {
     method: 'PATCH',
-    headers: buildHeaders(),
+    headers: { ...buildHeaders(), ...customHeaders },
     body: JSON.stringify(payload),
+  })
+
+  if (!response.ok) {
+    const message = await response.text()
+    throw new Error(message || 'Request failed')
+  }
+
+  const text = await response.text()
+  if (!text) {
+    return [] as T
+  }
+  return JSON.parse(text) as T
+}
+
+export async function supabaseDelete<T>(path: string) {
+  const response = await fetch(`${getBaseUrl()}${path}`, {
+    method: 'DELETE',
+    headers: buildHeaders(),
   })
 
   if (!response.ok) {

@@ -26,19 +26,16 @@ export function useDailySummary() {
   }, [])
 
   const summaryCards = useMemo(() => {
-    if (!summary) return null
+    const incomeTotal = summary
+      ? (summary.income as Record<string, number | string>)?.total_amount ?? 0
+      : 0
+    const expenseTotal = summary
+      ? (summary.expense as Record<string, number | string>)?.total_amount ?? 0
+      : 0
 
-    const incomeTotal =
-      (summary.income as Record<string, number | string>)?.total_amount ?? null
-    const expenseTotal =
-      (summary.expense as Record<string, number | string>)?.total_amount ?? null
-
-    const incomeValue = incomeTotal ? `฿${Number(incomeTotal).toLocaleString()}` : '—'
-    const expenseValue = expenseTotal ? `฿${Number(expenseTotal).toLocaleString()}` : '—'
-    const grossProfit =
-      incomeTotal && expenseTotal
-        ? `฿${(Number(incomeTotal) - Number(expenseTotal)).toLocaleString()}`
-        : '—'
+    const incomeValue = incomeTotal ? `₭${Number(incomeTotal).toLocaleString()}` : '₭0'
+    const expenseValue = expenseTotal ? `₭${Number(expenseTotal).toLocaleString()}` : '₭0'
+    const grossProfit = `₭${(Number(incomeTotal) - Number(expenseTotal)).toLocaleString()}`
 
     return [
       { label: 'ລາຍຮັບປະຈໍາວັນ', value: incomeValue, delta: 'ສົດ' },

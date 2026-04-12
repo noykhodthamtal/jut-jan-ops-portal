@@ -15,6 +15,7 @@ export function useItemGroups() {
   const [groups, setGroups] = useState<ItemGroup[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [query, setQuery] = useState('')
   const [formState, setFormState] = useState<ItemGroupFormState>({
@@ -42,23 +43,14 @@ export function useItemGroups() {
     loadGroups()
   }, [])
 
-  const fallbackGroups = useMemo(
-    () => [
-      { id: 'A', store_id: '', code: 'A', name: 'ກຸ່ມ A', sort_order: 1, color: null, is_active: true },
-      { id: 'B', store_id: '', code: 'B', name: 'ກຸ່ມ B', sort_order: 2, color: null, is_active: true },
-      { id: 'C', store_id: '', code: 'C', name: 'ກຸ່ມ C', sort_order: 3, color: null, is_active: false },
-    ],
-    []
-  )
 
   const rows = useMemo(() => {
-    const source = groups.length ? groups : fallbackGroups
-    if (!query.trim()) return source
+    if (!query.trim()) return groups
     const needle = query.trim().toLowerCase()
-    return source.filter((group) =>
+    return groups.filter((group) =>
       [group.code, group.name].some((value) => value.toLowerCase().includes(needle))
     )
-  }, [groups, fallbackGroups, query])
+  }, [groups, query])
 
   const handleCreate = async () => {
     const storeId = getStoreId()
@@ -85,6 +77,7 @@ export function useItemGroups() {
       setShowForm(false)
       setFormState({ code: '', name: '', sort_order: 1, color: '', is_active: true })
       setError(null)
+      setSuccess(true)
     } catch (err) {
       setError((err as Error).message)
     } finally {
@@ -100,6 +93,7 @@ export function useItemGroups() {
         prev.map((row) => (row.id === group.id ? { ...row, is_active: !row.is_active } : row))
       )
       setError(null)
+      setSuccess(true)
     } catch (err) {
       setError((err as Error).message)
     } finally {
@@ -115,6 +109,7 @@ export function useItemGroups() {
         prev.map((row) => (row.id === groupId ? { ...row, ...payload } : row))
       )
       setError(null)
+      setSuccess(true)
     } catch (err) {
       setError((err as Error).message)
     } finally {
@@ -126,9 +121,10 @@ export function useItemGroups() {
     const deletedAt = new Date().toISOString()
     setLoading(true)
     try {
-      await softDeleteItemGroup(group.id, deletedAt)
+      await softDeleteItemGroup(group.id, deletedAt, group.store_id)
       setGroups((prev) => prev.filter((row) => row.id !== group.id))
       setError(null)
+      setSuccess(true)
     } catch (err) {
       setError((err as Error).message)
     } finally {
@@ -141,6 +137,8 @@ export function useItemGroups() {
     rows,
     loading,
     error,
+    success,
+    setSuccess,
     showForm,
     formState,
     query,

@@ -9,6 +9,8 @@ import {
   Switch,
   TextField,
   Typography,
+  Snackbar,
+  Alert,
 } from '@mui/material'
 import { DataTable } from '../components'
 import { useItems } from '../hooks'
@@ -19,6 +21,8 @@ export default function Items() {
     groups,
     loading,
     error,
+    success,
+    setSuccess,
     showForm,
     formState,
     query,
@@ -235,7 +239,7 @@ export default function Items() {
                       >
                         ແກ້ໄຂ
                       </Button>
-                      <Button variant="text" color="error" onClick={() => handleSoftDelete(row.id)}>
+                      <Button variant="text" color="error" onClick={() => handleSoftDelete(row)}>
                         ລຶບ
                       </Button>
                     </>
@@ -257,6 +261,17 @@ export default function Items() {
           Supabase ຜິດພາດ: {error}
         </Typography>
       ) : null}
+
+      <Snackbar
+        open={success}
+        autoHideDuration={3000}
+        onClose={() => setSuccess(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={() => setSuccess(false)} severity="success" sx={{ width: '100%' }}>
+          ດໍາເນີນການສໍາເລັດແລ້ວ!
+        </Alert>
+      </Snackbar>
     </Stack>
   )
 }

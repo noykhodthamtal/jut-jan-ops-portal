@@ -15,6 +15,7 @@ export function useItems() {
   const [groups, setGroups] = useState<ItemGroup[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [query, setQuery] = useState('')
   const [formState, setFormState] = useState<ItemFormState>({
@@ -42,39 +43,16 @@ export function useItems() {
     loadItems()
   }, [])
 
-  const fallbackItems = useMemo(
-    () => [
-      {
-        id: 'mock-1',
-        name: 'Chicken Breast',
-        unit: 'kg',
-        group_id: '',
-        is_active: true,
-        store_id: '',
-      },
-      { id: 'mock-2', name: 'Palm Oil', unit: 'ltr', group_id: '', is_active: true, store_id: '' },
-      {
-        id: 'mock-3',
-        name: 'Paper Cup',
-        unit: 'pcs',
-        group_id: '',
-        is_active: false,
-        store_id: '',
-      },
-    ],
-    []
-  )
 
   const rows = useMemo(() => {
-    const source = items.length ? items : fallbackItems
-    if (!query.trim()) return source
+    if (!query.trim()) return items
     const needle = query.trim().toLowerCase()
-    return source.filter((item) =>
+    return items.filter((item) =>
       [item.name, item.unit, item.group_id].some((value) =>
         value.toLowerCase().includes(needle)
       )
     )
-  }, [items, fallbackItems, query])
+  }, [items, query])
 
   const handleCreate = async () => {
     const storeId = getStoreId()
@@ -94,6 +72,7 @@ export function useItems() {
       setShowForm(false)
       setFormState({ name: '', unit: '', group_id: '', is_active: true })
       setError(null)
+      setSuccess(true)
     } catch (err) {
       setError((err as Error).message)
     } finally {
@@ -107,6 +86,7 @@ export function useItems() {
       await updateItem(itemId, payload)
       setItems((prev) => prev.map((row) => (row.id === itemId ? { ...row, ...payload } : row)))
       setError(null)
+      setSuccess(true)
     } catch (err) {
       setError((err as Error).message)
     } finally {
@@ -114,13 +94,14 @@ export function useItems() {
     }
   }
 
-  const handleSoftDelete = async (itemId: string) => {
+  const handleSoftDelete = async (item: Item) => {
     const deletedAt = new Date().toISOString()
     setLoading(true)
     try {
-      await softDeleteItem(itemId, deletedAt)
-      setItems((prev) => prev.filter((row) => row.id !== itemId))
+      await softDeleteItem(item.id, deletedAt, item.store_id)
+      setItems((prev) => prev.filter((row) => row.id !== item.id))
       setError(null)
+      setSuccess(true)
     } catch (err) {
       setError((err as Error).message)
     } finally {
@@ -133,6 +114,8 @@ export function useItems() {
     groups,
     loading,
     error,
+    success,
+    setSuccess,
     showForm,
     query,
     formState,

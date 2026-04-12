@@ -18,29 +18,22 @@ import OutputIcon from "@mui/icons-material/Output";
 import SavingsIcon from "@mui/icons-material/Savings";
 import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
-import { useDailySummary } from "../hooks";
+import { useDailySummary, useDocuments } from "../hooks";
 
 const fallbackSummaryCards = [
-  { label: "ລາຍຮັບປະຈໍາວັນ", value: "฿12,450", delta: "+8.4%", icon: <AccountBalanceWalletIcon />, bg: "#ECFDF5", iconColor: "#10B981" },
-  { label: "ຄ່າໃຊ້ຈ່າຍປະຈໍາວັນ", value: "฿5,120", delta: "-3.1%", icon: <OutputIcon />, bg: "#FEF2F2", iconColor: "#EF4444" },
-  { label: "ກໍາໄລຂັ້ນຕົ້ນ", value: "฿7,330", delta: "+11.2%", icon: <SavingsIcon />, bg: "#EEF2FF", iconColor: "#6366F1" },
-];
-
-const docStatus = [
-  { label: "ຮັບສະຕັອກ", group: "A/B/C", value: "6 ເປີດ", bg: "#EEF2FF", color: "#6366F1", icon: <ReceiptLongIcon fontSize="small" /> },
-  { label: "ນັບສະຕັອກປະຈໍາວັນ", group: "A/B/C", value: "2 ເປີດ", bg: "#FDF4FF", color: "#C026D3", icon: <Inventory2Icon fontSize="small" /> },
-  { label: "ໃບສັ່ງຊື້", group: "A/B/C", value: "3 ຄ້າງຢືນຢັນ", bg: "#FFFBEB", color: "#D97706", icon: <ShoppingCartCheckoutIcon fontSize="small" /> },
-];
-
-const alerts = [
-  { text: "ຍັງບໍ່ປິດສະຕັອກກຸ່ມ B (ມື້ນີ້)", time: "1 ຊົ່ວໂມງກ່ອນ" },
-  { text: "PO ກຸ່ມ A ຍັງບໍ່ສົ່ງ", time: "2 ຊົ່ວໂມງກ່ອນ" },
-  { text: "ຍອດຄ່າໃຊ້ຈ່າຍຍັງບໍ່ຢືນຢັນ", time: "3 ຊົ່ວໂມງກ່ອນ" },
+  { icon: <AccountBalanceWalletIcon />, bg: "#ECFDF5", iconColor: "#10B981" },
+  { icon: <OutputIcon />, bg: "#FEF2F2", iconColor: "#EF4444" },
+  { icon: <SavingsIcon />, bg: "#EEF2FF", iconColor: "#6366F1" },
 ];
 
 export default function Dashboard() {
-  const { loading, error, summaryCards } = useDailySummary();
+  const { loading: dailyLoading, error: dailyError, summaryCards } = useDailySummary();
+  const today = new Date().toISOString().slice(0, 10);
+  const { rows: todayDocs, loading: docsLoading, error: docsError } = useDocuments({ fromDate: today, toDate: today });
   
+  const loading = dailyLoading || docsLoading;
+  const error = dailyError || docsError;
+
   const cards = summaryCards
     ? summaryCards.map((card, idx) => ({
         ...card,
@@ -48,7 +41,25 @@ export default function Dashboard() {
         bg: fallbackSummaryCards[idx]?.bg ?? "#ECFDF5",
         iconColor: fallbackSummaryCards[idx]?.iconColor ?? "#10B981",
       }))
-    : fallbackSummaryCards;
+    : [];
+
+  const docStatus = [
+    { label: "ຮັບສະຕັອກ", group: "ທັງໝົດ", value: `${todayDocs.filter(d => d.type === 'STOCK_RECEIPT').length} ລາຍການ`, bg: "#EEF2FF", color: "#6366F1", icon: <ReceiptLongIcon fontSize="small" /> },
+    { label: "ນັບສະຕັອກປະຈໍາວັນ", group: "ທັງໝົດ", value: `${todayDocs.filter(d => d.type === 'DAILY_STOCK_COUNT').length} ລາຍການ`, bg: "#FDF4FF", color: "#C026D3", icon: <Inventory2Icon fontSize="small" /> },
+    { label: "ໃບສັ່ງຊື້", group: "ທັງໝົດ", value: `${todayDocs.filter(d => d.type === 'PURCHASE_ORDER').length} ລາຍການ`, bg: "#FFFBEB", color: "#D97706", icon: <ShoppingCartCheckoutIcon fontSize="small" /> },
+  ];
+
+  const typeMapping: Record<string, string> = {
+    STOCK_RECEIPT: "ຮັບສະຕັອກ",
+    DAILY_STOCK_COUNT: "ນັບສະຕັອກ",
+    PURCHASE_ORDER: "ໃບສັ່ງຊື້"
+  };
+
+  const drafts = todayDocs.filter(d => d.status === 'DRAFT' || d.status === 'LOCKED');
+  const alerts = drafts.length ? drafts.map(d => ({
+    text: `ເອກະສານ ${typeMapping[d.type] || d.type} ກຸ່ມ ${d.group || '—'} ຍັງບໍ່ຢືນຢັນ`,
+    time: "ມື້ນີ້",
+  })) : [{ text: "ບໍ່ມີແຈ້ງເຕືອນໃໝ່ (ທຸກຢ່າງຮຽบร้อย)", time: "ມື້ນີ້" }];
 
   return (
     <Stack spacing={4}>
