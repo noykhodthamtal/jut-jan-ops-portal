@@ -88,7 +88,7 @@ export function useItemGroups() {
   const handleToggleActive = async (group: ItemGroup) => {
     setLoading(true)
     try {
-      await updateItemGroup(group.id, { is_active: !group.is_active })
+      await updateItemGroup(group.id, { is_active: !group.is_active, store_id: group.store_id })
       setGroups((prev) =>
         prev.map((row) => (row.id === group.id ? { ...row, is_active: !row.is_active } : row))
       )
@@ -102,9 +102,11 @@ export function useItemGroups() {
   }
 
   const handleUpdate = async (groupId: string, payload: UpdateItemGroupRequest) => {
+    const group = groups.find((g) => g.id === groupId)
+    if (!group) return
     setLoading(true)
     try {
-      await updateItemGroup(groupId, payload)
+      await updateItemGroup(groupId, { ...payload, store_id: group.store_id })
       setGroups((prev) =>
         prev.map((row) => (row.id === groupId ? { ...row, ...payload } : row))
       )
