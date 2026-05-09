@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import fs from 'fs'
+import fs from 'node:fs'
 
 const envFile = fs.readFileSync('.env', 'utf-8')
 const env: Record<string, string> = {}
@@ -8,8 +8,8 @@ envFile.split('\n').forEach(line => {
   if (key && val) env[key.trim()] = val.trim()
 })
 
-const supabaseUrl = env.VITE_SUPABASE_URL!
-const supabaseKey = env.VITE_SUPABASE_ANON_KEY!
+const supabaseUrl = env.VITE_SUPABASE_URL
+const supabaseKey = env.VITE_SUPABASE_ANON_KEY
 createClient(supabaseUrl, supabaseKey)
 
 // In a real browser, the anon key uses the JWT of the logged-in user.
