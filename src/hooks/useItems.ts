@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys, getErrorMessage } from '../lib/reactQuery'
 import { createItem, fetchItemGroups, fetchItems, softDeleteItem, updateItem } from '../services'
-import { getStoreId } from '../lib/supabase'
-import type { Item, ItemGroup, UpdateItemRequest } from '../models'
+import type { Item, UpdateItemRequest } from '../models'
+import { useCurrentStoreId } from './useCurrentStoreId'
 
 type ItemFormState = {
   name: string
@@ -11,13 +13,12 @@ type ItemFormState = {
 }
 
 export function useItems() {
-  const [items, setItems] = useState<Item[]>([])
-  const [groups, setGroups] = useState<ItemGroup[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const storeId = useCurrentStoreId()
+  const queryClient = useQueryClient()
   const [success, setSuccess] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [query, setQuery] = useState('')
+  const [localError, setLocalError] = useState<string | null>(null)
   const [formState, setFormState] = useState<ItemFormState>({
     name: '',
     unit: '',
@@ -25,24 +26,33 @@ export function useItems() {
     is_active: true,
   })
 
-  const loadItems = () => {
-    const storeId = getStoreId()
-    if (!storeId) return
-    setLoading(true)
-    Promise.all([fetchItems(storeId), fetchItemGroups(storeId)])
-      .then(([itemsData, groupData]) => {
-        setItems(itemsData)
-        setGroups(groupData)
-        setError(null)
-      })
-      .catch((err: Error) => setError(err.message))
-      .finally(() => setLoading(false))
-  }
+  const itemsQuery = useQuery({
+    queryKey: queryKeys.items(storeId),
+    queryFn: () => fetchItems(storeId),
+    enabled: Boolean(storeId),
+  })
 
-  useEffect(() => {
-    loadItems()
-  }, [])
+  const groupsQuery = useQuery({
+    queryKey: queryKeys.itemGroups(storeId),
+    queryFn: () => fetchItemGroups(storeId),
+    enabled: Boolean(storeId),
+  })
 
+  const createMutation = useMutation({
+    mutationFn: createItem,
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: UpdateItemRequest }) =>
+      updateItem(id, payload),
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: softDeleteItem,
+  })
+
+  const items = useMemo(() => itemsQuery.data ?? [], [itemsQuery.data])
+  const groups = useMemo(() => groupsQuery.data ?? [], [groupsQuery.data])
 
   const rows = useMemo(() => {
     if (!query.trim()) return items
@@ -54,66 +64,74 @@ export function useItems() {
     )
   }, [items, query])
 
+  const refreshItems = async () => {
+    await queryClient.invalidateQueries({ queryKey: queryKeys.items(storeId) })
+  }
+
   const handleCreate = async () => {
-    const storeId = getStoreId()
     if (!storeId) {
-      setError('ບໍ່ພົບລະຫັດຮ້ານ')
+      setLocalError('ບໍ່ພົບລະຫັດຮ້ານ')
       return
     }
     if (!formState.group_id) {
-      setError('ກະລຸນາເລືອກກຸ່ມ')
+      setLocalError('ກະລຸນາເລືອກກຸ່ມ')
       return
     }
-    setLoading(true)
+
     try {
-      const payload = { ...formState, store_id: storeId }
-      const created = await createItem(payload)
-      setItems((prev) => [...created, ...prev])
+      await createMutation.mutateAsync({ ...formState, store_id: storeId })
+      await refreshItems()
       setShowForm(false)
       setFormState({ name: '', unit: '', group_id: '', is_active: true })
-      setError(null)
+      setLocalError(null)
       setSuccess(true)
     } catch (err) {
-      setError((err as Error).message)
-    } finally {
-      setLoading(false)
+      setLocalError(getErrorMessage(err))
     }
   }
 
   const handleUpdate = async (itemId: string, payload: UpdateItemRequest) => {
-    setLoading(true)
     try {
-      await updateItem(itemId, payload)
-      setItems((prev) => prev.map((row) => (row.id === itemId ? { ...row, ...payload } : row)))
-      setError(null)
+      await updateMutation.mutateAsync({ id: itemId, payload })
+      await refreshItems()
+      setLocalError(null)
       setSuccess(true)
     } catch (err) {
-      setError((err as Error).message)
-    } finally {
-      setLoading(false)
+      setLocalError(getErrorMessage(err))
     }
   }
 
   const handleSoftDelete = async (item: Item) => {
-    const deletedAt = new Date().toISOString()
-    setLoading(true)
     try {
-      await softDeleteItem(item.id, deletedAt, item.store_id)
-      setItems((prev) => prev.filter((row) => row.id !== item.id))
-      setError(null)
+      await deleteMutation.mutateAsync(item.id)
+      await refreshItems()
+      setLocalError(null)
       setSuccess(true)
     } catch (err) {
-      setError((err as Error).message)
-    } finally {
-      setLoading(false)
+      setLocalError(getErrorMessage(err))
     }
   }
 
   return {
     rows,
     groups,
-    loading,
-    error,
+    loading:
+      itemsQuery.isLoading ||
+      itemsQuery.isFetching ||
+      groupsQuery.isLoading ||
+      groupsQuery.isFetching ||
+      createMutation.isPending ||
+      updateMutation.isPending ||
+      deleteMutation.isPending,
+    error:
+      localError ??
+      getErrorMessage(
+        itemsQuery.error ??
+          groupsQuery.error ??
+          createMutation.error ??
+          updateMutation.error ??
+          deleteMutation.error
+      ),
     success,
     setSuccess,
     showForm,

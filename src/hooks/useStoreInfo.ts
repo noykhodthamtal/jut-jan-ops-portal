@@ -1,35 +1,26 @@
-import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from '../lib/reactQuery'
 import { supabaseGet } from '../lib/supabase'
-import { getStoreId } from '../lib/supabase'
+import { useCurrentStoreId } from './useCurrentStoreId'
 
 export function useStoreInfo() {
-  const [storeId, setStoreId] = useState<string>(() => getStoreId())
-  const [storeName, setStoreName] = useState<string>('')
+  const storeId = useCurrentStoreId()
 
-  useEffect(() => {
-    const onStoreChange = () => {
-      setStoreId(getStoreId())
-    }
-    globalThis.addEventListener('jutjanops-store', onStoreChange as EventListener)
-    return () =>
-      globalThis.removeEventListener('jutjanops-store', onStoreChange as EventListener)
-  }, [])
-
-  useEffect(() => {
-    if (!storeId) {
-      setStoreName('')
-      return
-    }
-    supabaseGet<{ name: string }[]>('/stores', {
-      id: `eq.${storeId}`,
-      select: 'name',
-      limit: '1',
-    })
-      .then((rows) => {
-        setStoreName(rows[0]?.name ?? '')
+  const storeInfoQuery = useQuery({
+    queryKey: queryKeys.storeInfo(storeId),
+    queryFn: async () => {
+      const rows = await supabaseGet<{ name: string }[]>('/stores', {
+        id: `eq.${storeId}`,
+        select: 'name',
+        limit: '1',
       })
-      .catch(() => setStoreName(''))
-  }, [storeId])
+      return rows[0]?.name ?? ''
+    },
+    enabled: Boolean(storeId),
+  })
 
-  return { storeId, storeName }
+  return {
+    storeId,
+    storeName: storeInfoQuery.data ?? '',
+  }
 }

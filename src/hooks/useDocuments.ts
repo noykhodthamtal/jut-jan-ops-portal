@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys, getErrorMessage } from '../lib/reactQuery'
 import { fetchDocuments } from '../services'
-import { getStoreId } from '../lib/supabase'
 import type { DocumentListItem } from '../models'
-
+import { useCurrentStoreId } from './useCurrentStoreId'
 
 export type DocumentFilters = {
   fromDate?: string
@@ -12,35 +13,30 @@ export type DocumentFilters = {
 }
 
 export function useDocuments(filters?: DocumentFilters) {
-  const [documents, setDocuments] = useState<DocumentListItem[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const storeId = useCurrentStoreId()
+  const documentFilters = filters ?? {}
 
-  useEffect(() => {
-    const storeId = getStoreId()
-    if (!storeId) return
+  const documentsQuery = useQuery({
+    queryKey: queryKeys.documents(storeId, documentFilters),
+    queryFn: () =>
+      fetchDocuments({
+        storeId,
+        fromDate: documentFilters.fromDate,
+        toDate: documentFilters.toDate,
+        group: documentFilters.group,
+        status: documentFilters.status,
+      }),
+    enabled: Boolean(storeId),
+  })
 
-    setLoading(true)
-    fetchDocuments({
-      storeId,
-      fromDate: filters?.fromDate,
-      toDate: filters?.toDate,
-      group: filters?.group,
-      status: filters?.status,
-    })
-      .then((data) => {
-        setDocuments(data)
-        setError(null)
-      })
-      .catch((err: Error) => setError(err.message))
-      .finally(() => setLoading(false))
-  }, [filters?.fromDate, filters?.toDate, filters?.group, filters?.status])
-
-  const rows = useMemo(() => documents, [documents])
+  const rows = useMemo<DocumentListItem[]>(
+    () => documentsQuery.data ?? [],
+    [documentsQuery.data]
+  )
 
   return {
     rows,
-    loading,
-    error,
+    loading: documentsQuery.isLoading || documentsQuery.isFetching,
+    error: getErrorMessage(documentsQuery.error),
   }
 }

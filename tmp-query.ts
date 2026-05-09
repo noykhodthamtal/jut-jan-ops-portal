@@ -10,7 +10,7 @@ envFile.split('\n').forEach(line => {
 
 const supabaseUrl = env.VITE_SUPABASE_URL!
 const supabaseKey = env.VITE_SUPABASE_ANON_KEY!
-const supabase = createClient(supabaseUrl, supabaseKey)
+createClient(supabaseUrl, supabaseKey)
 
 // In a real browser, the anon key uses the JWT of the logged-in user.
 // However, the "anon" role might not be able to soft-delete if it's missing the user JWT.

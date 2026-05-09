@@ -1,4 +1,4 @@
-import { supabaseGet, supabasePatch, supabasePost } from '../lib/supabase'
+import { supabaseGet, supabasePatch, supabasePost, supabaseRpc } from '../lib/supabase'
 import type { CreateItemRequest, DailySummaryRow, Item, UpdateItemRequest } from '../models'
 
 export async function fetchDailySummary(storeId: string, date: string) {
@@ -25,14 +25,6 @@ export async function updateItem(id: string, payload: UpdateItemRequest) {
   return supabasePatch<Item[]>(`/items?id=eq.${id}`, payload)
 }
 
-export async function softDeleteItem(id: string, deletedAt: string, storeId: string) {
-  return supabasePatch<Item[]>(
-    `/items?id=eq.${id}`,
-    { 
-      store_id: storeId,
-      deleted_at: deletedAt,
-      is_active: false
-    },
-    { Prefer: 'return=minimal' }
-  )
+export async function softDeleteItem(id: string) {
+  return supabaseRpc<void>('soft_delete', { p_table: 'items', p_id: id })
 }

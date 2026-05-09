@@ -1,4 +1,4 @@
-import { supabaseGet, supabasePatch, supabasePost } from '../lib/supabase'
+import { supabaseGet, supabasePatch, supabasePost, supabaseRpc } from '../lib/supabase'
 import type {
   CreatePurchaseOrderRuleRequest,
   PurchaseOrderRule,
@@ -23,8 +23,6 @@ export async function updatePurchaseOrderRule(
   return supabasePatch<PurchaseOrderRule[]>(`/purchase_order_rules?id=eq.${id}`, payload)
 }
 
-export async function softDeletePurchaseOrderRule(id: string, deletedAt: string) {
-  return supabasePatch<PurchaseOrderRule[]>(`/purchase_order_rules?id=eq.${id}`, {
-    deleted_at: deletedAt,
-  })
+export async function softDeletePurchaseOrderRule(id: string) {
+  return supabaseRpc<void>('soft_delete', { p_table: 'purchase_order_rules', p_id: id })
 }

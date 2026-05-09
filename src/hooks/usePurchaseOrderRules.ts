@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys, getErrorMessage } from '../lib/reactQuery'
 import {
   createPurchaseOrderRule,
   fetchItemGroups,
@@ -6,8 +8,8 @@ import {
   softDeletePurchaseOrderRule,
   updatePurchaseOrderRule,
 } from '../services'
-import { getStoreId } from '../lib/supabase'
-import type { ItemGroup, PurchaseOrderRule, UpdatePurchaseOrderRuleRequest } from '../models'
+import type { PurchaseOrderRule, UpdatePurchaseOrderRuleRequest } from '../models'
+import { useCurrentStoreId } from './useCurrentStoreId'
 
 type RuleFormState = {
   group_id: string
@@ -15,93 +17,94 @@ type RuleFormState = {
 }
 
 export function usePurchaseOrderRules() {
-  const [rules, setRules] = useState<PurchaseOrderRule[]>([])
-  const [groups, setGroups] = useState<ItemGroup[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const storeId = useCurrentStoreId()
+  const queryClient = useQueryClient()
   const [showForm, setShowForm] = useState(false)
+  const [localError, setLocalError] = useState<string | null>(null)
   const [formState, setFormState] = useState<RuleFormState>({
     group_id: '',
     threshold_percent: 10,
   })
 
-  const loadData = () => {
-    const storeId = getStoreId()
-    if (!storeId) return
-    setLoading(true)
-    Promise.all([fetchPurchaseOrderRules(storeId), fetchItemGroups(storeId)])
-      .then(([rulesData, groupsData]) => {
-        setRules(rulesData)
-        setGroups(groupsData)
-        setError(null)
-      })
-      .catch((err: Error) => setError(err.message))
-      .finally(() => setLoading(false))
-  }
+  const rulesQuery = useQuery({
+    queryKey: queryKeys.purchaseOrderRules(storeId),
+    queryFn: () => fetchPurchaseOrderRules(storeId),
+    enabled: Boolean(storeId),
+  })
 
-  useEffect(() => {
-    loadData()
-  }, [])
+  const groupsQuery = useQuery({
+    queryKey: queryKeys.itemGroups(storeId),
+    queryFn: () => fetchItemGroups(storeId),
+    enabled: Boolean(storeId),
+  })
+
+  const createMutation = useMutation({
+    mutationFn: createPurchaseOrderRule,
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: UpdatePurchaseOrderRuleRequest }) =>
+      updatePurchaseOrderRule(id, payload),
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: softDeletePurchaseOrderRule,
+  })
+
+  const rules = useMemo(() => rulesQuery.data ?? [], [rulesQuery.data])
+  const groups = useMemo(() => groupsQuery.data ?? [], [groupsQuery.data])
 
   const groupMap = useMemo(
     () => new Map(groups.map((group) => [group.id, group])),
     [groups]
   )
 
+  const refreshRules = async () => {
+    await queryClient.invalidateQueries({ queryKey: queryKeys.purchaseOrderRules(storeId) })
+  }
+
   const handleCreate = async () => {
-    const storeId = getStoreId()
     if (!storeId) {
-      setError('ບໍ່ພົບລະຫັດຮ້ານ')
+      setLocalError('ບໍ່ພົບລະຫັດຮ້ານ')
       return
     }
     if (!formState.group_id) {
-      setError('ກະລຸນາເລືອກກຸ່ມວັດຖຸດິບ')
+      setLocalError('ກະລຸນາເລືອກກຸ່ມວັດຖຸດິບ')
       return
     }
-    setLoading(true)
+
     try {
-      const created = await createPurchaseOrderRule({
+      await createMutation.mutateAsync({
         store_id: storeId,
         group_id: formState.group_id,
         threshold_percent: formState.threshold_percent,
       })
-      setRules((prev) => [...created, ...prev])
+      await refreshRules()
       setShowForm(false)
       setFormState({ group_id: '', threshold_percent: 10 })
-      setError(null)
+      setLocalError(null)
     } catch (err) {
-      setError((err as Error).message)
-    } finally {
-      setLoading(false)
+      setLocalError(getErrorMessage(err))
     }
   }
 
   const handleUpdate = async (ruleId: string, payload: UpdatePurchaseOrderRuleRequest) => {
-    setLoading(true)
     try {
-      await updatePurchaseOrderRule(ruleId, payload)
-      setRules((prev) =>
-        prev.map((row) => (row.id === ruleId ? { ...row, ...payload } : row))
-      )
-      setError(null)
+      await updateMutation.mutateAsync({ id: ruleId, payload })
+      await refreshRules()
+      setLocalError(null)
     } catch (err) {
-      setError((err as Error).message)
-    } finally {
-      setLoading(false)
+      setLocalError(getErrorMessage(err))
     }
   }
 
   const handleSoftDelete = async (rule: PurchaseOrderRule) => {
-    const deletedAt = new Date().toISOString()
-    setLoading(true)
     try {
-      await softDeletePurchaseOrderRule(rule.id, deletedAt)
-      setRules((prev) => prev.filter((row) => row.id !== rule.id))
-      setError(null)
+      await deleteMutation.mutateAsync(rule.id)
+      await refreshRules()
+      setLocalError(null)
     } catch (err) {
-      setError((err as Error).message)
-    } finally {
-      setLoading(false)
+      setLocalError(getErrorMessage(err))
     }
   }
 
@@ -109,8 +112,23 @@ export function usePurchaseOrderRules() {
     rules,
     groups,
     groupMap,
-    loading,
-    error,
+    loading:
+      rulesQuery.isLoading ||
+      rulesQuery.isFetching ||
+      groupsQuery.isLoading ||
+      groupsQuery.isFetching ||
+      createMutation.isPending ||
+      updateMutation.isPending ||
+      deleteMutation.isPending,
+    error:
+      localError ??
+      getErrorMessage(
+        rulesQuery.error ??
+          groupsQuery.error ??
+          createMutation.error ??
+          updateMutation.error ??
+          deleteMutation.error
+      ),
     showForm,
     formState,
     setShowForm,

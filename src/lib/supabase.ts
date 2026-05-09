@@ -93,6 +93,10 @@ export async function supabasePost<T>(path: string, payload: unknown) {
   return JSON.parse(text) as T
 }
 
+export async function supabaseRpc<T>(fn: string, payload?: Record<string, unknown>) {
+  return supabasePost<T>(`/rpc/${fn}`, payload ?? {})
+}
+
 export async function supabasePatch<T>(path: string, payload: unknown, customHeaders?: Record<string, string>) {
   const response = await fetch(`${getBaseUrl()}${path}`, {
     method: 'PATCH',

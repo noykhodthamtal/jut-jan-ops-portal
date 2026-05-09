@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys, getErrorMessage } from '../lib/reactQuery'
 import { createExpenseCategory, fetchExpenseCategories, updateExpenseCategory } from '../services'
-import { getStoreId } from '../lib/supabase'
 import type { ExpenseCategory } from '../models'
+import { useCurrentStoreId } from './useCurrentStoreId'
 
 const fallbackCategories: ExpenseCategory[] = [
   { id: '1', store_id: '', name: 'ຄ່າເຊົ່າ', is_fixed: true, is_active: true },
@@ -10,83 +12,81 @@ const fallbackCategories: ExpenseCategory[] = [
 ]
 
 export function useExpenseCategories() {
-  const [categories, setCategories] = useState<ExpenseCategory[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const storeId = useCurrentStoreId()
+  const queryClient = useQueryClient()
   const [showForm, setShowForm] = useState(false)
+  const [localError, setLocalError] = useState<string | null>(null)
   const [formState, setFormState] = useState({
     name: '',
     is_fixed: true,
     is_active: true,
   })
 
-  const loadCategories = () => {
-    const storeId = getStoreId()
-    if (!storeId) return
+  const categoriesQuery = useQuery({
+    queryKey: queryKeys.expenseCategories(storeId),
+    queryFn: () => fetchExpenseCategories(storeId),
+    enabled: Boolean(storeId),
+  })
 
-    setLoading(true)
-    fetchExpenseCategories(storeId)
-      .then((data) => {
-        setCategories(data)
-        setError(null)
-      })
-      .catch((err: Error) => setError(err.message))
-      .finally(() => setLoading(false))
-  }
+  const createMutation = useMutation({
+    mutationFn: createExpenseCategory,
+  })
 
-  useEffect(() => {
-    loadCategories()
-  }, [])
+  const updateMutation = useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: Partial<ExpenseCategory> }) =>
+      updateExpenseCategory(id, payload),
+  })
 
-  const rows = useMemo(() => (categories.length ? categories : fallbackCategories), [categories])
+  const rows = useMemo(() => {
+    const categories = categoriesQuery.data ?? []
+    return categories.length ? categories : fallbackCategories
+  }, [categoriesQuery.data])
 
   const handleCreate = async () => {
-    const storeId = getStoreId()
     if (!storeId) {
-      setError('ບໍ່ພົບລະຫັດຮ້ານ')
+      setLocalError('ບໍ່ພົບລະຫັດຮ້ານ')
       return
     }
 
-    setLoading(true)
     try {
-      const created = await createExpenseCategory({
+      await createMutation.mutateAsync({
         store_id: storeId,
         name: formState.name,
         is_fixed: formState.is_fixed,
         is_active: formState.is_active,
       })
-      setCategories((prev) => [...created, ...prev])
+      await queryClient.invalidateQueries({ queryKey: queryKeys.expenseCategories(storeId) })
       setShowForm(false)
       setFormState({ name: '', is_fixed: true, is_active: true })
-      setError(null)
+      setLocalError(null)
     } catch (err) {
-      setError((err as Error).message)
-    } finally {
-      setLoading(false)
+      setLocalError(getErrorMessage(err))
     }
   }
 
   const handleToggleActive = async (category: ExpenseCategory) => {
-    setLoading(true)
     try {
-      const updated = await updateExpenseCategory(category.id, {
-        is_active: !category.is_active,
+      await updateMutation.mutateAsync({
+        id: category.id,
+        payload: { is_active: !category.is_active },
       })
-      if (updated[0]) {
-        setCategories((prev) => prev.map((c) => (c.id === category.id ? updated[0] : c)))
-      }
-      setError(null)
+      await queryClient.invalidateQueries({ queryKey: queryKeys.expenseCategories(storeId) })
+      setLocalError(null)
     } catch (err) {
-      setError((err as Error).message)
-    } finally {
-      setLoading(false)
+      setLocalError(getErrorMessage(err))
     }
   }
 
   return {
     rows,
-    loading,
-    error,
+    loading:
+      categoriesQuery.isLoading ||
+      categoriesQuery.isFetching ||
+      createMutation.isPending ||
+      updateMutation.isPending,
+    error:
+      localError ??
+      getErrorMessage(categoriesQuery.error ?? createMutation.error ?? updateMutation.error),
     showForm,
     setShowForm,
     formState,

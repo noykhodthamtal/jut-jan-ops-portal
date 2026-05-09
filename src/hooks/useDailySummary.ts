@@ -1,37 +1,30 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys, getErrorMessage } from '../lib/reactQuery'
 import { fetchDailySummary } from '../services'
-import { getStoreId } from '../lib/supabase'
+import { useCurrentStoreId } from './useCurrentStoreId'
 
 export function useDailySummary() {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [summary, setSummary] = useState<Record<string, unknown> | null>(null)
+  const storeId = useCurrentStoreId()
+  const today = new Date().toISOString().slice(0, 10)
 
-  useEffect(() => {
-    const storeId = getStoreId()
-    if (!storeId) return
+  const summaryQuery = useQuery({
+    queryKey: queryKeys.dailySummary(storeId, today),
+    queryFn: () => fetchDailySummary(storeId, today),
+    enabled: Boolean(storeId),
+  })
 
-    const today = new Date().toISOString().slice(0, 10)
-    setLoading(true)
-    fetchDailySummary(storeId, today)
-      .then((data) => {
-        setSummary({
-          income: data?.income ?? null,
-          expense: data?.expense ?? null,
-        })
-        setError(null)
-      })
-      .catch((err: Error) => setError(err.message))
-      .finally(() => setLoading(false))
-  }, [])
+  const summary = useMemo(() => {
+    const data = summaryQuery.data
+    return {
+      income: data?.income ?? null,
+      expense: data?.expense ?? null,
+    }
+  }, [summaryQuery.data])
 
   const summaryCards = useMemo(() => {
-    const incomeTotal = summary
-      ? (summary.income as Record<string, number | string>)?.total_amount ?? 0
-      : 0
-    const expenseTotal = summary
-      ? (summary.expense as Record<string, number | string>)?.total_amount ?? 0
-      : 0
+    const incomeTotal = (summary.income as Record<string, number | string> | null)?.total_amount ?? 0
+    const expenseTotal = (summary.expense as Record<string, number | string> | null)?.total_amount ?? 0
 
     const incomeValue = incomeTotal ? `₭${Number(incomeTotal).toLocaleString()}` : '₭0'
     const expenseValue = expenseTotal ? `₭${Number(expenseTotal).toLocaleString()}` : '₭0'
@@ -45,8 +38,8 @@ export function useDailySummary() {
   }, [summary])
 
   return {
-    loading,
-    error,
+    loading: summaryQuery.isLoading || summaryQuery.isFetching,
+    error: getErrorMessage(summaryQuery.error),
     summary,
     summaryCards,
   }

@@ -1,46 +1,31 @@
-import { useState } from 'react'
-import { loginWithPassword, signOut } from '../services'
+import { useMutation } from '@tanstack/react-query'
+import { getErrorMessage } from '../lib/reactQuery'
 import { syncAccessToken } from '../lib/supabase'
+import { loginWithPassword, signOut } from '../services'
 
 export function useAuth() {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const login = async (email: string, password: string) => {
-    setLoading(true)
-    try {
-      const session = await loginWithPassword(email, password)
+  const loginMutation = useMutation({
+    mutationFn: ({ email, password }: { email: string; password: string }) =>
+      loginWithPassword(email, password),
+    onSuccess: (session) => {
       syncAccessToken(session.access_token)
       globalThis.dispatchEvent(new Event('jutjanops-auth'))
-      setError(null)
-      return session
-    } catch (err) {
-      setError((err as Error).message)
-      throw err
-    } finally {
-      setLoading(false)
-    }
-  }
+    },
+  })
 
-  const logout = async () => {
-    setLoading(true)
-    try {
-      await signOut()
+  const logoutMutation = useMutation({
+    mutationFn: () => signOut(),
+    onSuccess: () => {
       syncAccessToken('')
       globalThis.dispatchEvent(new Event('jutjanops-auth'))
-      setError(null)
-    } catch (err) {
-      setError((err as Error).message)
-      throw err
-    } finally {
-      setLoading(false)
-    }
-  }
+    },
+  })
 
   return {
-    login,
-    logout,
-    loading,
-    error,
+    login: async (email: string, password: string) =>
+      loginMutation.mutateAsync({ email, password }),
+    logout: async () => logoutMutation.mutateAsync(),
+    loading: loginMutation.isPending || logoutMutation.isPending,
+    error: getErrorMessage(loginMutation.error ?? logoutMutation.error),
   }
 }

@@ -1,28 +1,23 @@
 import { useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from '../lib/reactQuery'
+import { setStoreId } from '../lib/supabase'
 import { fetchStoreIdForUser } from '../services/storeContext'
-import { getStoreId, setStoreId } from '../lib/supabase'
+import { useCurrentStoreId } from './useCurrentStoreId'
 import { useSession } from './useSession'
 
 export function useStoreContext() {
   const { userId } = useSession()
+  const storeId = useCurrentStoreId()
+
+  const storeContextQuery = useQuery({
+    queryKey: queryKeys.storeIdForUser(userId),
+    queryFn: () => fetchStoreIdForUser(userId),
+    enabled: Boolean(userId) && !storeId,
+  })
 
   useEffect(() => {
-    if (!userId) return
-
-    const currentStoreId = getStoreId()
-
-    // If we already have a storeId cached, dispatch the event immediately
-    // so useStoreInfo can pick it up and fetch the store name
-    if (currentStoreId) {
-      globalThis.dispatchEvent(new Event('jutjanops-store'))
-      return
-    }
-
-    // Otherwise fetch from the API
-    fetchStoreIdForUser(userId)
-      .then((storeId) => {
-        if (storeId) setStoreId(storeId) // setStoreId already dispatches the event
-      })
-      .catch(() => null)
-  }, [userId])
+    if (storeId || !storeContextQuery.data) return
+    setStoreId(storeContextQuery.data)
+  }, [storeContextQuery.data, storeId])
 }

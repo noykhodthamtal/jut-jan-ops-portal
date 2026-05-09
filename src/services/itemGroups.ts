@@ -1,4 +1,4 @@
-import { supabaseGet, supabasePatch, supabasePost } from '../lib/supabase'
+import { supabaseGet, supabasePatch, supabasePost, supabaseRpc } from '../lib/supabase'
 import type { CreateItemGroupRequest, ItemGroup, UpdateItemGroupRequest } from '../models'
 
 
@@ -18,14 +18,6 @@ export async function updateItemGroup(id: string, payload: UpdateItemGroupReques
   return supabasePatch<ItemGroup[]>(`/item_groups?id=eq.${id}`, payload)
 }
 
-export async function softDeleteItemGroup(id: string, deletedAt: string, storeId: string) {
-  return supabasePatch<ItemGroup[]>(
-    `/item_groups?id=eq.${id}`,
-    {
-      store_id: storeId,
-      deleted_at: deletedAt,
-      is_active: false,
-    },
-    { Prefer: 'return=minimal' }
-  )
+export async function softDeleteItemGroup(id: string) {
+  return supabaseRpc<void>('soft_delete', { p_table: 'item_groups', p_id: id })
 }
